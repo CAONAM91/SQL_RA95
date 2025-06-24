@@ -119,11 +119,11 @@ INSERT INTO Account (Username, DepartmentID, PositionID, CreateDate) VALUES
 ('User_1', 4, 1, '2023-05-02'),
 ('User_2', 19, 3, '2023-07-09'),
 ('User_3', 22, 3, '2023-06-01'),
-('User_4', 17, 2, '2023-01-12'),
+('User_4', 1, 2, '2023-01-12'),
 ('User_5', 8, 2, '2023-02-01'),
-('User_6', 21, 4, '2023-06-27'),
+('User_6', 1, 4, '2023-06-27'),
 ('User_7', 5, 1, '2023-08-17'),
-('User_8', 10, 3, '2023-10-10'),
+('User_8', 1, 3, '2023-10-10'),
 ('User_9', 3, 2, '2023-12-19'),
 ('User_10', 14, 1, '2023-11-15'),
 ('User_11', 24, 4, '2023-03-03'),
@@ -188,15 +188,15 @@ INSERT INTO GroupAccount (GroupID, AccountID, JoinDate) VALUES
 (14, 11, '2023-10-14'),
 (15, 13, '2023-06-11'),
 (16, 10, '2023-05-25'),
-(17, 21, '2023-09-17'),
+(17, 2, '2023-09-17'),
 (18, 1, '2023-01-30'),
 (19, 16, '2023-04-04'),
-(20, 23, '2023-07-03'),
+(20, 2, '2023-07-03'),
 (21, 18, '2023-08-08'),
 (22, 19, '2023-02-02'),
 (23, 22, '2023-11-29'),
 (24, 24, '2023-03-21'),
-(25, 25, '2023-12-15');
+(24, 25, '2023-12-15');
 
 -- TypeQuestion
 INSERT INTO TypeQuestion (TypeName) VALUES ('Essay');
@@ -256,7 +256,7 @@ INSERT INTO Answer (Content, QuestionID, isCorrect) VALUES
 ('Answer_14', 14, 'N'),
 ('Answer_15', 15, 'Y'),
 ('Answer_16', 16, 'N'),
-('Answer_17', 17, 'Y'),
+('Answer_17', 16, 'Y'),
 ('Answer_18', 18, 'Y'),
 ('Answer_19', 19, 'N'),
 ('Answer_20', 20, 'Y'),
@@ -312,7 +312,7 @@ INSERT INTO ExamQuestion (ExamID, QuestionID) VALUES
 (14, 14),
 (15, 15),
 (16, 16),
-(17, 17),
+(17, 16),
 (18, 18),
 (19, 19),
 (20, 20),
@@ -349,12 +349,14 @@ having AnswerQuantity >=4 ;
 select Code from Exam  where  Duration >= '01:00:00' AND CreateDate < '2019-12-20';
 
 -- Question 9: Lấy ra 5 group được tạo gần đây nhất 
- select *  from `Group` 
- order by CreatorDate desc
- limit 5;
+ SELECT 
+    *
+FROM
+    `Group`
+ORDER BY CreatorDate DESC
+LIMIT 5;
  
 
- 
 -- Question 10: Đếm số nhân viên thuộc department có id = 2 
 select count(1) from Account where DepartmentId = 2;
 
@@ -377,6 +379,112 @@ where AccountID = 5;
 select * from Account;
 
 -- Question 15: update account có id = 5 sẽ thuộc group có id = 4 
+
+-- lấy ra dữ liệu thông tin của question và answer có isCorrect = 1
+select * from Question q
+join Answer a on q.QuestionID = a.QuestionID
+where isCorrect = "Y";
+-- Question 1: Viết lệnh để lấy ra danh sách nhân viên và thông tin phòng ban của họ 
+select * from Account a
+left join Department d on a.DepartmentId = d.DepartmentId;
+
+-- Question 2: Viết lệnh để lấy ra thông tin các account được tạo sau ngày 20/12/2010  
+select * from Account where CreateDate > "2010-12-20";
+
+-- Question 3: Viết lệnh để lấy ra tất cả các developer  
+select * from Position where PositionName = "Dev";
+
+-- Question 4: Viết lệnh để lấy ra danh sách các phòng ban có >3 nhân viên 
+select count(AccountID) as soluongnhanvien, DepartmentName from Department d
+join Account a on a.DepartmentId = d.DepartmentId
+group by  DepartmentName
+having soluongnhanvien > 3;
+
+-- Question 5: Viết lệnh để lấy ra danh sách câu hỏi được sử dụng trong đề thi nhiều nhất 
+select eq.QuestionId, q.Content, COUNT(eq.ExamID) AS SoLanXuatHien from ExamQuestion  eq
+join Question q on q.QuestionID = eq.QuestionID
+group by eq.QuestionID
+having count(ExamId) = (select max(SoLuong) from
+(select count(ExamId) as SoLuong from ExamQuestion  eq
+join Question q on q.QuestionID = eq.QuestionID
+group by eq.QuestionID) as temp);
+ 
+
+-- Question 6: Thông kê mỗi category Question được sử dụng trong bao nhiêu Question 
+select cq.CategoryID, count(QuestionID) as SoLanSD  from CategoryQuestion cq
+join Question q on cq.CategoryID = q.CategoryID
+group by cq.CategoryID;
+
+-- Question 7: Thông kê mỗi Question được sử dụng trong bao nhiêu Exam 
+select QuestionID, count(*) as Solansudung from ExamQuestion 
+group by QuestionID;
+
+-- Question 8: Lấy ra Question có nhiều câu trả lời nhất 
+
+select q.QuestionID, q.Content, count(AnswerID) as soluong  from Question q
+left join Answer a on q.QuestionID = a.QuestionID
+group by  QuestionID ;
+
+-- Question 9: Thống kê số lượng account trong mỗi group 
+ select g.GroupID , g.GroupName, count(a.AccountID) soluong from `Group` g
+ left join GroupAccount ga on ga.GroupID = g.GroupID
+ left join Account a  on  a.AccountID= ga.AccountID
+ group by GroupID, GroupName
+ order by GroupID  ;
+
+
+-- Question 10: Tìm chức vụ có ít người nhất 
+select p.PositionID, PositionName, count(AccountID) soluong  from Position p 
+join Account a on a.PositionID = p.PositionID
+group by PositionID , PositionName
+having soluong = (select min(soluong) from( select count(AccountID) soluong , PositionID from Account
+group by PositionID) as temp)  ;
+
+
+-- Question 11: Thống kê mỗi phòng ban có bao nhiêu dev, test, scrum master, PM   
+select  p.PositionID, p.PositionName,count(AccountID) soluong   from Position p
+join Account a on a.PositionID = p.PositionID
+group by PositionID , PositionName;
+
+-- Question 12: Lấy thông tin chi tiết của câu hỏi bao gồm: thông tin cơ bản của question, loại câu hỏi, ai là người tạo ra câu hỏi, câu trả lời là gì, … 
+select * from Question q
+join Answer a on q.QuestionID = a.QuestionID;
+
+
+-- Question 13: Lấy ra số lượng câu hỏi của mỗi loại tự luận hay trắc nghiệm 
+
+-- Question 14:Lấy ra group không có account nào 
+select g.GroupID, GroupName, count( AccountID) as soluongnhanvien from `Group` g
+join GroupAccount  ga on g.GroupID = ga.GroupID
+group by GroupID, GroupName
+having soluongnhanvien = 0;
+
+-- Question 16: Lấy ra question không có answer nào 
+
+select count(AnswerID) as soluong, q.QuestionID, q.Content from Question q
+join Answer a on q.QuestionID = a.QuestionID
+group by q.QuestionID
+having soluong = 1;
+
+
+
+
+
+
+
+ 
+
+-- Lấy các account thuộc nhóm thứ 1 
+-- Lấy các account thuộc nhóm thứ 2 
+-- Ghép 2 kết quả từ câu a) và câu b) sao cho không có record nào trùng nhau 
+
+select * from Account a
+join GroupAccount ga on ga.AccountID= a.AccountID
+where GroupID = 1 
+union
+select * from Account a
+join GroupAccount ga on ga.AccountID= a.AccountID
+where GroupID = 2 ;
 
 
 
